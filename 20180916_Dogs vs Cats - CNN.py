@@ -36,6 +36,8 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.models import model_from_json
 from tensorflow import metrics
 import sklearn.metrics
+import pandas as pd
+from tensorflow import set_random_seed
 from inspect import signature
 # warnings.resetwarnings()  # Reset warnings filter
 
@@ -53,8 +55,10 @@ RunDate = dt.datetime.now()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
-# Set random.seed
+# Set random.seed for tensorflow and numpy
 Random_Seed = 123
+set_random_seed(Random_Seed)
+np.random.seed(Random_Seed)
 
 
 #* Pick a random (sort of) sample dog picture and inspect
@@ -321,14 +325,13 @@ ax1.set_xticks(
         , 1
     )
 )
-# ax1.set_yticks(
-#     np.arange(
-#         0
-#         , 1
-#         , 0.1
-#     )
-# )
+ax1.set(ylabel='Loss')
+legend1 = ax1.legend(
+    loc='best'
+    , shadow=True
+)
 
+# Show second subplot
 ax2.plot(
     classifier.history.history['acc']
     , color='b'
@@ -346,10 +349,12 @@ ax2.set_xticks(
         , 1
     )
 )
-legend = plt.legend(
+legend2 = ax2.legend(
     loc='best'
     , shadow=True
 )
+ax2.set(ylabel='Accuracy')
+plt.xlabel('Training Epochs')
 plt.tight_layout()
 plt.show()
 
@@ -400,6 +405,21 @@ Test_Predict = classifier_model.predict_generator(
     , verbose=1
 )
 Test_Predict = Test_Predict.reshape(Test_Predict.size, )
+
+
+# Create panda dataframe from predictions and labels
+Predict_df = pd.DataFrame(
+    {'Actual':Testing_Set.labels
+     , 'Predict':Test_Predict}
+)
+
+Predict_df.to_csv(
+    path_or_buf=
+    str(
+        os.getcwd() +
+        '/Export_Predict_df.csv'
+    )
+)
 
 
 ##############################################################
@@ -473,4 +493,9 @@ plt.xlabel('Recall')
 plt.ylabel('Precision')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
-plt.title('2-Class Precision-Recall Curve AP = 0.894')
+plt.title(
+    str(
+        '2-Class Precision-Recall Curve AP = ' +
+        str(round(Test_average_precision_recall, 3))
+        )
+)
